@@ -12,7 +12,7 @@ BG.Parent = Noclip
 BG.BackgroundColor3 = Color3.new(0, 0, 0)
 BG.BorderColor3 = Color3.new(0.0588235, 0.0588235, 0.0588235)
 BG.BorderSizePixel = 2
-BG.Position = UDim2.new(0.149479166, 0, 0.82087779, 0)
+BG.Position = UDim2.new(0.5, -140, 0.8, -115)
 BG.Size = UDim2.new(0, 280, 0, 230)
 BG.Active = true
 BG.Draggable = true
@@ -122,7 +122,7 @@ Toggle.MouseButton1Click:Connect(function()
         Status.Text = "on"
         Status.TextColor3 = Color3.new(0, 185, 0)
         local Stepped = game:GetService("RunService").Stepped:Connect(function()
-            if not Clipon == false then
+            if Clipon then
                 for _, character in ipairs(Plr.Character:GetDescendants()) do
                     if character:IsA("BasePart") then
                         character.CanCollide = false
