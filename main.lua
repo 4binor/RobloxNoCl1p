@@ -12,7 +12,7 @@ BG.Parent = Noclip
 BG.BackgroundColor3 = Color3.new(0, 0, 0)
 BG.BorderColor3 = Color3.new(0.0588235, 0.0588235, 0.0588235)
 BG.BorderSizePixel = 2
-BG.Position = UDim2.new(0.5, -140, 0.8, -115)
+BG.Position = UDim2.new(0.149479166, 0, 0.82087779, 0)
 BG.Size = UDim2.new(0, 280, 0, 230)
 BG.Active = true
 BG.Draggable = true
@@ -122,7 +122,7 @@ Toggle.MouseButton1Click:Connect(function()
         Status.Text = "on"
         Status.TextColor3 = Color3.new(0, 185, 0)
         local Stepped = game:GetService("RunService").Stepped:Connect(function()
-            if Clipon then
+            if not Clipon == false then
                 for _, character in ipairs(Plr.Character:GetDescendants()) do
                     if character:IsA("BasePart") then
                         character.CanCollide = false
@@ -135,35 +135,52 @@ Toggle.MouseButton1Click:Connect(function()
     elseif Status.Text == "on" then
         Clipon = false
         Status.Text = "off"
-        Status.TextColor3 = Color3.new(170, 0, 0)
+        Status.TextColor3 = Color3.new(0.666667, 0, 0)
+        for _, character in ipairs(Plr.Character:GetDescendants()) do
+            if character:IsA("BasePart") then
+                character.CanCollide = true
+            end
+        end
     end
 end)
 
 Fly.MouseButton1Click:Connect(function()
-    FlyEnabled = not FlyEnabled
-    if FlyEnabled then
-        Plr.CharacterAdded:Connect(function(character)
-            character:WaitForChild("Humanoid").Died:Connect(function()
-                FlyEnabled = false
-            end)
-        end)
-        local humanoid = Plr.Character:WaitForChild("Humanoid")
-        humanoid.PlatformStand = true
-        humanoid.Sit = true
-        humanoid.JumpPower = 0
-        local mouse = Plr:GetMouse()
-        mouse.KeyDown:Connect(function(key)
-            if key == "q" then
-                FlyEnabled = false
+    if FlyEnabled == false then
+        FlyEnabled = true
+        Fly.Text = "Stop Flying"
+        Fly.TextColor3 = Color3.new(0.666667, 0, 0)
+        local BodyVelocity = Instance.new("BodyVelocity")
+        BodyVelocity.Velocity = Vector3.new(0, 0, 0)
+        BodyVelocity.MaxForce = Vector3.new(1e9, 1e9, 1e9)
+        BodyVelocity.Parent = Plr.Character.HumanoidRootPart
+        local FlyStepped = game:GetService("RunService").Stepped:Connect(function()
+            if not FlyEnabled == false then
+                local CamLook = Workspace.CurrentCamera.CFrame.LookVector
+                local CamRight = Workspace.CurrentCamera.CFrame.RightVector
+                local CamForward = Workspace.CurrentCamera.CFrame.LookVector
+                local CamBackward = -Workspace.CurrentCamera.CFrame.LookVector
+                local CamLeft = -Workspace.CurrentCamera.CFrame.RightVector
+                if UserInputService:IsKeyDown(Enum.KeyCode.W) then
+                    BodyVelocity.Velocity = CamForward * 100
+                elseif UserInputService:IsKeyDown(Enum.KeyCode.S) then
+                    BodyVelocity.Velocity = CamBackward * 100
+                elseif UserInputService:IsKeyDown(Enum.KeyCode.A) then
+                    BodyVelocity.Velocity = CamLeft * 100
+                elseif UserInputService:IsKeyDown(Enum.KeyCode.D) then
+                    BodyVelocity.Velocity = CamRight * 100
+                else
+                    BodyVelocity.Velocity = Vector3.new(0, 0, 0)
+                end
+            else
+                BodyVelocity:Destroy()
+                FlyStepped:Disconnect()
             end
         end)
-        local flyVector = Vector3.new(0, 1, 0)
-        local flying = true
-        game:GetService("RunService").Stepped:Connect(function()
-            if FlyEnabled and flying and Plr.Character then
-                Plr.Character.Humanoid:ChangeState(Enum.HumanoidStateType.Physics)
-                Plr.Character.HumanoidRootPart.Velocity = flyVector * 50
-            end
-        end)
+    else
+        FlyEnabled = false
+        Fly.Text = "Fly"
+        Fly.TextColor3 = Color3.new(1, 1, 1)
+        Plr.Character.HumanoidRootPart.BodyVelocity:Destroy()
+        FlyStepped:Disconnect()
     end
 end)
