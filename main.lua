@@ -122,71 +122,54 @@ Toggle.MouseButton1Click:Connect(function()
         Clipon = true
         Status.Text = "on"
         Status.TextColor3 = Color3.new(0, 185, 0)
-        for _, character in ipairs(Plr.Character:GetDescendants()) do
-            if character:IsA("BasePart") then
-                character.CanCollide = false
-            end
-        end
     else
         Clipon = false
         Status.Text = "off"
         Status.TextColor3 = Color3.new(170, 0, 0)
-        for _, character in ipairs(Plr.Character:GetDescendants()) do
-            if character:IsA("BasePart") then
-                character.CanCollide = true
-            end
-        end
     end
 end)
 
 Fly.MouseButton1Click:Connect(function()
-    if FlyEnabled == false then
-        FlyEnabled = true
-        Fly.Text = "Stop Flying"
-        Fly.TextColor3 = Color3.new(0, 185, 0)
-    else
-        FlyEnabled = false
-        Fly.Text = "Fly"
-        Fly.TextColor3 = Color3.new(170, 0, 0)
+    FlyEnabled = not FlyEnabled
+    if FlyEnabled then
+        Plr.CharacterAdded:Connect(function(character)
+            character:WaitForChild("Humanoid").Died:Connect(function()
+                FlyEnabled = false
+            end)
+        end)
+    end
+end)
+
+local function Clip()
+    if Clipon then
+        for _, child in ipairs(Workspace:GetDescendants()) do
+            if child:IsA("BasePart") and child.CanCollide == true then
+                child.CanCollide = false
+            end
+        end
+    end
+end
+
+local function Unclip()
+    for _, child in ipairs(Workspace:GetDescendants()) do
+        if child:IsA("BasePart") and child.CanCollide == false then
+            child.CanCollide = true
+        end
+    end
+end
+
+UserInputService.InputBegan:Connect(function(input)
+    if input.KeyCode == Enum.KeyCode.Space then
+        if FlyEnabled then
+            Plr.Character:FindFirstChildOfClass("Humanoid"):ChangeState(Enum.HumanoidStateType.Jumping)
+        end
     end
 end)
 
 game:GetService("RunService").RenderStepped:Connect(function()
-    if Clipon == true then
-        for _, character in ipairs(Plr.Character:GetDescendants()) do
-            if character:IsA("BasePart") then
-                character.Velocity = Vector3.new(0, 0, 0)
-            end
-        end
+    if FlyEnabled then
+        Plr.Character:FindFirstChildOfClass("Humanoid"):ChangeState(Enum.HumanoidStateType.Flying)
     end
-    if FlyEnabled == true then
-        local Cam = Workspace.CurrentCamera
-        local Character = Plr.Character
-        local Humanoid = Character:FindFirstChildOfClass("Humanoid")
-        
-        if Cam and Character and Humanoid then
-            local CamCF = Cam.CFrame
-            local Unit = (CamCF.lookVector + Vector3.new(0, 1, 0)).unit
-            local Speed = 50
 
-            local MoveDir = Vector3.new()
-            if UserInputService:IsKeyDown(Enum.KeyCode.W) then
-                MoveDir = MoveDir + Unit
-            end
-            if UserInputService:IsKeyDown(Enum.KeyCode.A) then
-                MoveDir = MoveDir - CamCF.rightVector
-            end
-            if UserInputService:IsKeyDown(Enum.KeyCode.S) then
-                MoveDir = MoveDir - Unit
-            end
-            if UserInputService:IsKeyDown(Enum.KeyCode.D) then
-                MoveDir = MoveDir + CamCF.rightVector
-            end
-            MoveDir = MoveDir.unit
-
-            if MoveDir ~= Vector3.new() then
-                Character:MoveTo(Character.Position + MoveDir * Speed * Humanoid.MoveDirection.X * 0.1)
-            end
-        end
-    end
+    Clip()
 end)
