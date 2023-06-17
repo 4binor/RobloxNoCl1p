@@ -1,6 +1,7 @@
 local Workspace = game:GetService("Workspace")
 local CoreGui = game:GetService("CoreGui")
 local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
 
 local Noclip = Instance.new("ScreenGui")
 Noclip.Name = "Noclip"
@@ -121,21 +122,15 @@ Toggle.MouseButton1Click:Connect(function()
         Clipon = true
         Status.Text = "on"
         Status.TextColor3 = Color3.new(0, 185, 0)
-        local Stepped = game:GetService("RunService").Stepped:Connect(function()
-            if not Clipon == false then
-                for _, character in ipairs(Plr.Character:GetDescendants()) do
-                    if character:IsA("BasePart") then
-                        character.CanCollide = false
-                    end
-                end
-            else
-                Stepped:Disconnect()
+        for _, character in ipairs(Plr.Character:GetDescendants()) do
+            if character:IsA("BasePart") then
+                character.CanCollide = false
             end
-        end)
-    elseif Status.Text == "on" then
+        end
+    else
         Clipon = false
         Status.Text = "off"
-        Status.TextColor3 = Color3.new(0.666667, 0, 0)
+        Status.TextColor3 = Color3.new(170, 0, 0)
         for _, character in ipairs(Plr.Character:GetDescendants()) do
             if character:IsA("BasePart") then
                 character.CanCollide = true
@@ -148,39 +143,50 @@ Fly.MouseButton1Click:Connect(function()
     if FlyEnabled == false then
         FlyEnabled = true
         Fly.Text = "Stop Flying"
-        Fly.TextColor3 = Color3.new(0.666667, 0, 0)
-        local BodyVelocity = Instance.new("BodyVelocity")
-        BodyVelocity.Velocity = Vector3.new(0, 0, 0)
-        BodyVelocity.MaxForce = Vector3.new(1e9, 1e9, 1e9)
-        BodyVelocity.Parent = Plr.Character.HumanoidRootPart
-        local FlyStepped = game:GetService("RunService").Stepped:Connect(function()
-            if not FlyEnabled == false then
-                local CamLook = Workspace.CurrentCamera.CFrame.LookVector
-                local CamRight = Workspace.CurrentCamera.CFrame.RightVector
-                local CamForward = Workspace.CurrentCamera.CFrame.LookVector
-                local CamBackward = -Workspace.CurrentCamera.CFrame.LookVector
-                local CamLeft = -Workspace.CurrentCamera.CFrame.RightVector
-                if UserInputService:IsKeyDown(Enum.KeyCode.W) then
-                    BodyVelocity.Velocity = CamForward * 100
-                elseif UserInputService:IsKeyDown(Enum.KeyCode.S) then
-                    BodyVelocity.Velocity = CamBackward * 100
-                elseif UserInputService:IsKeyDown(Enum.KeyCode.A) then
-                    BodyVelocity.Velocity = CamLeft * 100
-                elseif UserInputService:IsKeyDown(Enum.KeyCode.D) then
-                    BodyVelocity.Velocity = CamRight * 100
-                else
-                    BodyVelocity.Velocity = Vector3.new(0, 0, 0)
-                end
-            else
-                BodyVelocity:Destroy()
-                FlyStepped:Disconnect()
-            end
-        end)
+        Fly.TextColor3 = Color3.new(0, 185, 0)
     else
         FlyEnabled = false
         Fly.Text = "Fly"
-        Fly.TextColor3 = Color3.new(1, 1, 1)
-        Plr.Character.HumanoidRootPart.BodyVelocity:Destroy()
-        FlyStepped:Disconnect()
+        Fly.TextColor3 = Color3.new(170, 0, 0)
+    end
+end)
+
+game:GetService("RunService").RenderStepped:Connect(function()
+    if Clipon == true then
+        for _, character in ipairs(Plr.Character:GetDescendants()) do
+            if character:IsA("BasePart") then
+                character.Velocity = Vector3.new(0, 0, 0)
+            end
+        end
+    end
+    if FlyEnabled == true then
+        local Cam = Workspace.CurrentCamera
+        local Character = Plr.Character
+        local Humanoid = Character:FindFirstChildOfClass("Humanoid")
+        
+        if Cam and Character and Humanoid then
+            local CamCF = Cam.CFrame
+            local Unit = (CamCF.lookVector + Vector3.new(0, 1, 0)).unit
+            local Speed = 50
+
+            local MoveDir = Vector3.new()
+            if UserInputService:IsKeyDown(Enum.KeyCode.W) then
+                MoveDir = MoveDir + Unit
+            end
+            if UserInputService:IsKeyDown(Enum.KeyCode.A) then
+                MoveDir = MoveDir - CamCF.rightVector
+            end
+            if UserInputService:IsKeyDown(Enum.KeyCode.S) then
+                MoveDir = MoveDir - Unit
+            end
+            if UserInputService:IsKeyDown(Enum.KeyCode.D) then
+                MoveDir = MoveDir + CamCF.rightVector
+            end
+            MoveDir = MoveDir.unit
+
+            if MoveDir ~= Vector3.new() then
+                Character:MoveTo(Character.Position + MoveDir * Speed * Humanoid.MoveDirection.X * 0.1)
+            end
+        end
     end
 end)
